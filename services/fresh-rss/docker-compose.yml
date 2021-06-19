@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:12.6-alpine
+    container_name: freshrss-db
+    hostname: freshrss-db
+    restart: unless-stopped
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: freshrss
+      POSTGRES_PASSWORD: /run/secrets/rpi_aas_fresh_rss_db_password
+      POSTGRES_DB: freshrss
+    secrets:
+      - rpi_aas_fresh_rss_db_password
+
+  freshrss-app:
+    image: freshrss/freshrss:1.18.0-arm
+    container_name: freshrss-app
+    hostname: freshrss-app
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    volumes:
+      - ./data/freshrss/data:/var/www/FreshRSS/data
+      - ./data/freshrss/extensions:/var/www/FreshRSS/extensions
+    environment:
+      CRON_MIN: '*/20'
+      TZ: Europe/Paris
+secrets:
+  rpi_aas_fresh_rss_db_password:
+    external: true
